@@ -1,37 +1,65 @@
 ---
-import headshot from "../images/headshot.jpg";
+import headshot from "../images/headshot-noback2.png";
+import bgscroll from "../images/bgscroll.jpg";
+import { getImage } from "astro:assets";
+
+const bgscrollUrl = await getImage({ src: bgscroll })
 ---
 
 <div id="container">
   <main>
-    <section id="hero">
+    <section id="hero" style={`background-image: url(${bgscrollUrl.src});`}>
       <img
         id="headshot"
         alt="A professional photo of Lily Groth smiling in a polo."
         src={headshot.src}
       />
-
-      <h1>Hi, I'm Lily.</h1>
-      <h2>CS @ Northwestern</h2>
+      <div id="hero-text">
+        <h1>Hi, I'm Lily.</h1>
+        <h2>CS @ Northwestern</h2>
+      </div>
     </section>
   </main>
 </div>
 
 <style>
+  @keyframes bgAnimate {
+    0% {background-position-x: 0;}
+    100% {background-position-x: -4853px;}
+  }
+
   #hero {
     font-family:
       Inter, Roboto, "Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial,
       sans-serif;
     height: 100%;
-    display:
+    display: flex;
+    justify-content: space-evenly;
+    padding-left: 5%;
+    padding-right: 5%;
+    animation-name: bgAnimate;
+    animation-duration: 60s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    background-repeat: repeat-x;
+    color: white;
   }
 
   #headshot {
-    width: 30%;
-    margin-left: 10%;
+    width: 40%;
+    
   }
 
-  #container h1 {
-    font-size: 10em;
+  #hero h1 {
+    font-size: 5em;
+  }
+
+  #hero h2 {
+    font-size: 2.5em;
+  }
+
+  #hero-text {
+    align: "center";
+    padding: 5em;
   }
 </style>
