@@ -1,65 +1,203 @@
 ---
+import { Image, getImage } from "astro:assets";
 import headshot from "../images/headshot-noback2.png";
 import bgscroll from "../images/bgscroll.jpg";
-import { getImage } from "astro:assets";
 
-const bgscrollUrl = await getImage({ src: bgscroll })
+const bg = await getImage({ src: bgscroll, format: "webp" });
 ---
 
-<div id="container">
-  <main>
-    <section id="hero" style={`background-image: url(${bgscrollUrl.src});`}>
-      <img
-        id="headshot"
-        alt="A professional photo of Lily Groth smiling in a polo."
-        src={headshot.src}
-      />
-      <div id="hero-text">
-        <h1>Hi, I'm Lily.</h1>
-        <h2>CS @ Northwestern</h2>
-      </div>
-    </section>
-  </main>
-</div>
+<section
+  id="hero"
+  style={`--bg-url: url(${bg.src}); --bg-ratio: ${bgscroll.width * 2} / ${bgscroll.height};`}
+>
+  <div class="bg-strip" aria-hidden="true"></div>
+
+  <div class="hero-half hero-photo">
+    <Image
+      id="headshot"
+      src={headshot}
+      alt="A professional photo of Lily Groth smiling in a polo."
+      widths={[400, 700, 1000, 1400]}
+      sizes="(max-width: 767px) 0px, 45vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+
+  <div class="hero-half hero-text">
+    <h1>Hi, I'm Lily.</h1>
+    <p class="tagline">CS @ Northwestern</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#projects">See my work</a>
+      <a class="btn btn-secondary" href="#contact">Get in touch</a>
+    </div>
+  </div>
+</section>
 
 <style>
-  @keyframes bgAnimate {
-    0% {background-position-x: 0;}
-    100% {background-position-x: -4853px;}
-  }
-
   #hero {
+    position: relative;
+    display: flex;
+    min-height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+    color: white;
     font-family:
       Inter, Roboto, "Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial,
       sans-serif;
+    background: #111;
+  }
+
+  /* Two copies of the artwork side by side; sliding by exactly one copy
+     (-50%) loops seamlessly at any viewport height. */
+  .bg-strip {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    z-index: -2;
     height: 100%;
-    display: flex;
-    justify-content: space-evenly;
-    padding-left: 5%;
-    padding-right: 5%;
-    animation-name: bgAnimate;
-    animation-duration: 60s;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
+    aspect-ratio: var(--bg-ratio);
+    background-image: var(--bg-url);
     background-repeat: repeat-x;
-    color: white;
+    background-size: 50% 100%;
+    animation: bg-scroll 60s linear infinite;
+    will-change: transform;
+  }
+
+  /* Darken the art so the text stays readable over busy pieces. */
+  #hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.15) 0%,
+      rgb(0 0 0 / 0.35) 45%,
+      rgb(0 0 0 / 0.6) 100%
+    );
+  }
+
+  @keyframes bg-scroll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .hero-half {
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+
+  /* Headshot sits on the bottom edge so the cutout looks grounded. */
+  .hero-photo {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
   }
 
   #headshot {
-    width: 40%;
-    
+    display: block;
+    width: min(90%, 85svh);
+    height: auto;
+    filter: drop-shadow(0 10px 30px rgb(0 0 0 / 0.45));
   }
 
-  #hero h1 {
-    font-size: 5em;
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 2rem 6vw 2rem 2rem;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 0.5);
   }
 
-  #hero h2 {
-    font-size: 2.5em;
+  h1 {
+    margin: 0;
+    font-size: clamp(2.75rem, 7vw, 6rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
   }
 
-  #hero-text {
-    align: "center";
-    padding: 5em;
+  .tagline {
+    margin: 0;
+    font-size: clamp(1.25rem, 2.5vw, 2rem);
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.8em 1.5em;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    text-shadow: none;
+    transition:
+      transform 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn:focus-visible {
+    outline: 3px solid white;
+    outline-offset: 3px;
+  }
+
+  .btn-primary {
+    background: white;
+    color: #111;
+  }
+
+  .btn-secondary {
+    border: 2px solid white;
+    color: white;
+    backdrop-filter: blur(4px);
+  }
+
+  .btn-secondary:hover {
+    background: rgb(255 255 255 / 0.15);
+  }
+
+  /* Mobile: text only, centered. */
+  @media (max-width: 767px) {
+    .hero-photo {
+      display: none;
+    }
+
+    #hero::after {
+      background: rgb(0 0 0 / 0.5);
+    }
+
+    .hero-text {
+      align-items: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .actions {
+      justify-content: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-strip {
+      animation: none;
+    }
+
+    .btn {
+      transition: none;
+    }
   }
 </style>
