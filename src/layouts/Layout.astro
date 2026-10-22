@@ -22,6 +22,16 @@ const { transparentNav = false } = Astro.props;
 	<body>
 		<Navbar transparentAtTop={transparentNav} />
 		<slot />
+
+		<script>
+			// Deterrent only: blocks right-click "Save image" and drag-to-desktop
+			// on images. Screenshots and dev tools still work.
+			for (const type of ['contextmenu', 'dragstart']) {
+				document.addEventListener(type, (e) => {
+					if (e.target instanceof HTMLImageElement) e.preventDefault();
+				});
+			}
+		</script>
 	</body>
 </html>
 
@@ -33,6 +43,14 @@ const { transparentNav = false } = Astro.props;
 		/* No rubber-band bounce past the top/bottom of the page, which would
 		   otherwise flash the plain background behind the hero and last card. */
 		overscroll-behavior-y: none;
+	}
+
+	/* Pairs with the script above: no dragging images out, no selecting them,
+	   and no long-press "Save image" menu on iOS. */
+	img {
+		-webkit-user-drag: none;
+		user-select: none;
+		-webkit-touch-callout: none;
 	}
 
 	@media (max-width: 767px) {

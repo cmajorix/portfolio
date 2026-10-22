@@ -33,6 +33,11 @@ const {
   imageLoading = "lazy",
   zoomFocus,
 } = Astro.props;
+
+// Never ship the full-resolution original: cap every version (including the
+// fallback `src`) at 1600px, and don't upscale small images.
+const maxWidth = Math.min(1600, image.width);
+const widths = [480, 800, 1200, 1600].filter((w) => w < maxWidth).concat(maxWidth);
 ---
 
 <section id={id} class="split-card" data-image-side={imageSide}>
@@ -40,7 +45,8 @@ const {
     <Image
       src={image}
       alt={imageAlt}
-      widths={[480, 800, 1200, 1600]}
+      width={maxWidth}
+      widths={widths}
       sizes="(max-width: 767px) 100vw, 60vw"
       style={`object-position: ${imagePosition};${zoomFocus ? ` transform-origin: ${zoomFocus};` : ""}`}
       loading={imageLoading}
