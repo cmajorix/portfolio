@@ -1,0 +1,290 @@
+---
+interface Props {
+  /** Start see-through with white text (for pages that open on a dark hero). */
+  transparentAtTop?: boolean;
+}
+
+const { transparentAtTop = false } = Astro.props;
+
+const links = [
+  { label: "About", href: "/about" },
+  { label: "Projects", href: "/projects" },
+  { label: "Photography", href: "/photo" },
+  { label: "Contact", href: "/contact" },
+];
+
+const current = Astro.url.pathname.replace(/\/$/, "") || "/";
+---
+
+<header
+  id="site-nav"
+  class:list={{ "transparent-at-top": transparentAtTop, solid: !transparentAtTop }}
+>
+  <nav aria-label="Main">
+    <a class="brand" href="/">Lily Groth</a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="nav-links"
+      aria-label="Open menu"
+    >
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <ul id="nav-links">
+      {
+        links.map(({ label, href }) => (
+          <li>
+            <a href={href} aria-current={current === href ? "page" : undefined}>
+              {label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
+
+<script>
+  const header = document.getElementById("site-nav")!;
+  const toggle = header.querySelector<HTMLButtonElement>(".menu-toggle")!;
+  const mobile = window.matchMedia("(max-width: 767px)");
+  let lastY = window.scrollY;
+  let queued = false;
+
+  function setOpen(open: boolean) {
+    header.classList.toggle("open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  }
+
+  function update() {
+    queued = false;
+    const y = window.scrollY;
+    header.classList.toggle("scrolled", y > 4);
+    // On phones, get out of the way while scrolling down; come back on scroll up.
+    const hide = mobile.matches && y > lastY && y > header.offsetHeight;
+    if (hide) setOpen(false);
+    header.classList.toggle("hidden", hide);
+    lastY = y;
+  }
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true },
+  );
+  mobile.addEventListener("change", () => setOpen(false));
+  update();
+
+  toggle.addEventListener("click", () => setOpen(!header.classList.contains("open")));
+  header.querySelectorAll("#nav-links a").forEach((a) =>
+    a.addEventListener("click", () => setOpen(false)),
+  );
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && header.classList.contains("open")) {
+      setOpen(false);
+      toggle.focus();
+    }
+  });
+</script>
+
+<style>
+  #site-nav {
+    --fg: #111;
+    --bg: rgb(255 255 255 / 1);
+    --shadow: 0 2px 16px rgb(0 0 0 / 0.12);
+
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 100;
+    height: var(--nav-h);
+    color: var(--fg);
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    transition:
+      color 300ms ease,
+      background-color 300ms ease,
+      box-shadow 300ms ease,
+      transform 300ms ease;
+  }
+
+  /* At the very top of a page with a dark hero: see-through, white text. */
+  #site-nav.transparent-at-top:not(.scrolled):not(.open) {
+    --fg: white;
+    --bg: rgb(255 255 255 / 0);
+    --shadow: 0 0 0 transparent;
+    text-shadow: 0 1px 8px rgb(0 0 0 / 0.4);
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding-inline: 5vw;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .brand {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  ul {
+    display: flex;
+    gap: 2.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  ul a {
+    position: relative;
+    font-weight: 600;
+    padding-block: 0.25rem;
+  }
+
+  /* Underline that grows in on hover and marks the current page. */
+  ul a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
+  }
+
+  ul a:hover::after,
+  ul a[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+
+  a:focus-visible,
+  .menu-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+
+  /* Phones: menu button that drops the links down in a white panel. */
+  @media (max-width: 767px) {
+    #site-nav.hidden {
+      transform: translateY(-100%);
+    }
+
+    nav {
+      padding-inline: 1.25rem;
+    }
+
+    .menu-toggle {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 44px;
+      height: 44px;
+      margin-right: -10px;
+      padding: 10px;
+      border: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .bar {
+      display: block;
+      height: 2px;
+      background: currentColor;
+      border-radius: 1px;
+      transition:
+        transform 250ms ease,
+        opacity 250ms ease;
+    }
+
+    /* Bars fold into an X when open. */
+    .open .bar:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .open .bar:nth-child(2) {
+      opacity: 0;
+    }
+    .open .bar:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    ul {
+      position: absolute;
+      inset: 100% 0 auto 0;
+      flex-direction: column;
+      gap: 0;
+      padding: 0.5rem 1.25rem 1.25rem;
+      background: white;
+      box-shadow: 0 12px 16px rgb(0 0 0 / 0.12);
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition:
+        opacity 200ms ease,
+        transform 200ms ease,
+        visibility 0s 200ms;
+    }
+
+    .open ul {
+      visibility: visible;
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity 200ms ease,
+        transform 200ms ease;
+    }
+
+    ul a {
+      display: block;
+      padding-block: 0.85rem;
+      font-size: 1.15rem;
+    }
+
+    ul li + li {
+      border-top: 1px solid #eee;
+    }
+
+    ul a::after {
+      display: none;
+    }
+
+    ul a[aria-current="page"] {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #site-nav,
+    #site-nav * {
+      transition: none !important;
+    }
+  }
+</style>

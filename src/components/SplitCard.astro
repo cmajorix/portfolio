@@ -1,0 +1,277 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+interface Props {
+  id?: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonHref: string;
+  image: ImageMetadata;
+  imageAlt: string;
+  imageSide?: "left" | "right";
+  /** Which part of the image to keep when it's cropped, e.g. "30% center". */
+  imagePosition?: string;
+  /** Use "eager" for a card that's likely on screen soon after the page loads. */
+  imageLoading?: "lazy" | "eager";
+  /** Point the scroll zoom grows from, e.g. "80% 40%". Defaults to the
+      middle of the part of the image that isn't behind the white panel. */
+  zoomFocus?: string;
+}
+
+const {
+  id,
+  title,
+  description,
+  buttonText,
+  buttonHref,
+  image,
+  imageAlt,
+  imageSide = "right",
+  imagePosition = "center",
+  imageLoading = "lazy",
+  zoomFocus,
+} = Astro.props;
+---
+
+<section id={id} class="split-card" data-image-side={imageSide}>
+  <div class="media">
+    <Image
+      src={image}
+      alt={imageAlt}
+      widths={[480, 800, 1200, 1600]}
+      sizes="(max-width: 767px) 100vw, 60vw"
+      style={`object-position: ${imagePosition};${zoomFocus ? ` transform-origin: ${zoomFocus};` : ""}`}
+      loading={imageLoading}
+    />
+  </div>
+
+  <div class="panel-shadow">
+    <div class="panel">
+      <div class="content">
+        <h2>{title}</h2>
+        <p>{description}</p>
+        <a class="btn" href={buttonHref}>{buttonText}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Feeds --p to each card: 0 when its top edge appears at the bottom of the
+  // screen, 1 once its top reaches the top of the screen. Drives the zoom.
+  const cards = document.querySelectorAll<HTMLElement>(".split-card");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let queued = false;
+
+  function update() {
+    queued = false;
+    const vh = window.innerHeight;
+    for (const card of cards) {
+      const { top } = card.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (vh - top) / vh));
+      card.style.setProperty("--p", p.toFixed(3));
+    }
+  }
+
+  function queue() {
+    if (!queued && !reduceMotion.matches) {
+      queued = true;
+      requestAnimationFrame(update);
+    }
+  }
+
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", queue);
+  queue();
+</script>
+
+<style>
+  .split-card {
+    /* --top / --bottom: where the diagonal meets the top and bottom edges,
+       measured from the panel's side. --zoom is the extra scale at full scroll. */
+    --p: 0;
+    --top: 55%;
+    --bottom: 45%;
+    --zoom: 0.12;
+
+    position: relative;
+    display: flex;
+    /* Height follows width so the image area keeps the same shape (and
+       crops the same way) at any window size. The floor only kicks in on
+       narrow windows, where the text needs the room, and the cap only on
+       ultrawide screens, so a card is never taller than the screen. */
+    aspect-ratio: 2 / 1;
+    min-height: 420px;
+    max-height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+    background: #ddd;
+  }
+
+  .media {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(calc(1 + var(--p) * var(--zoom)));
+    will-change: transform;
+  }
+
+  /* drop-shadow on the parent follows the clipped (diagonal) shape. */
+  .panel-shadow {
+    position: absolute;
+    inset: 0;
+    filter: drop-shadow(var(--shadow-x, 14px) 0 28px rgb(0 0 0 / 0.6));
+    pointer-events: none;
+  }
+
+  .panel {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background: white;
+    color: #111;
+    pointer-events: auto;
+  }
+
+  .content {
+    width: min(36%, 34rem);
+    padding: 3rem 0;
+    margin-inline: 6vw;
+  }
+
+  /* Image on the right: white panel on the left. */
+  [data-image-side="right"] .media {
+    left: 35%;
+  }
+
+  /* The visible part of the image runs from the diagonal (~50% of the card)
+     to the card edge; its middle is ~61.5% across the image box. */
+  [data-image-side="right"] .media img {
+    transform-origin: 61.5% 50%;
+  }
+
+  [data-image-side="right"] .panel {
+    clip-path: polygon(0 0, var(--top) 0, var(--bottom) 100%, 0 100%);
+  }
+
+  /* Image on the left: mirror everything. */
+  [data-image-side="left"] .media {
+    right: 35%;
+  }
+
+  [data-image-side="left"] .media img {
+    transform-origin: 38.5% 50%;
+  }
+
+  [data-image-side="left"] .panel-shadow {
+    --shadow-x: -14px;
+  }
+
+  [data-image-side="left"] .panel {
+    justify-content: flex-end;
+    clip-path: polygon(
+      calc(100% - var(--top)) 0,
+      100% 0,
+      100% 100%,
+      calc(100% - var(--bottom)) 100%
+    );
+  }
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0 0 2rem;
+    font-size: clamp(1rem, 1.3vw, 1.2rem);
+    line-height: 1.6;
+    color: #444;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.8em 1.5em;
+    border-radius: 999px;
+    background: #111;
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 150ms ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn:focus-visible {
+    outline: 3px solid #111;
+    outline-offset: 3px;
+  }
+
+  /* Mobile: image on top, white panel below with a diagonal top edge.
+     Edges are measured down from the top and alternate direction per card. */
+  @media (max-width: 767px) {
+    .split-card {
+      --m-high: 42vw;
+      --m-low: 54vw;
+      aspect-ratio: auto;
+      min-height: 0;
+      max-height: none;
+    }
+
+    [data-image-side] .media {
+      inset: 0 0 auto 0;
+      height: 64vw;
+    }
+
+    /* Only the top ~48vw of the 64vw image clears the diagonal. */
+    [data-image-side] .media img {
+      transform-origin: 50% 37.5%;
+    }
+
+    .panel-shadow {
+      position: relative;
+      width: 100%;
+      filter: drop-shadow(0 -10px 22px rgb(0 0 0 / 0.5));
+    }
+
+    [data-image-side] .panel {
+      display: block;
+      padding-top: 56vw;
+    }
+
+    [data-image-side="right"] .panel {
+      clip-path: polygon(0 var(--m-high), 100% var(--m-low), 100% 100%, 0 100%);
+    }
+
+    [data-image-side="left"] .panel {
+      clip-path: polygon(0 var(--m-low), 100% var(--m-high), 100% 100%, 0 100%);
+    }
+
+    .content {
+      width: auto;
+      margin: 0;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition: none;
+    }
+  }
+</style>

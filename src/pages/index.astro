@@ -1,0 +1,48 @@
+---
+import Hero from '../components/Hero.astro';
+import SplitCard from '../components/SplitCard.astro';
+import Layout from '../layouts/Layout.astro';
+import fbimage from '../images/home_fb.jpg';
+import photoimage from '../images/home_photo.jpg';
+import projectimage from '../images/home_project.png';
+---
+
+<Layout transparentNav>
+	<main>
+		<Hero />
+		<SplitCard
+			id="projects"
+			title="Projects"
+			description="I bring ideas to life inside and outside of the classroom. See my creations from my time at Northwestern and side projects in domains I'm passionate about."
+			buttonText="See projects"
+			buttonHref="/projects"
+			image={projectimage}
+			imageAlt="A matrix display for a Spotify listener's current status, developed by Lily Groth."
+			imageSide="right"
+			imagePosition="center"
+			imageLoading="eager"
+		/>
+		<SplitCard
+			id="sports"
+			title="Sports"
+			description="From day-to-day operations to analytics projects, I have a wide net of experience in the sports industry. Read more about my work."
+			buttonText="View gallery"
+			buttonHref="/about"
+			image={fbimage}
+			imageAlt="Lily Groth holding the 2025 GameAbove Sports Bowl trophy."
+			imageSide="left"
+			imagePosition="100% center"
+		/>
+		<SplitCard
+			id="photo"
+			title="Photography"
+			description="Offline, I've been practicing photography since 2020. I've taken my camera to esports tournaments, bike rides, and all across the world. Come see my work here."
+			buttonText="View gallery"
+			buttonHref="/photo"
+			image={photoimage}
+			imageAlt="A photograph of the Swiss Alps taken by Lily Groth on the Stoos Ridge hike in Switzerland."
+			imageSide="right"
+			imagePosition="75% center"
+		/>
+	</main>
+</Layout>

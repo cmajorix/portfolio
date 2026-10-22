@@ -1,0 +1,58 @@
+---
+import Navbar from '../components/Navbar.astro';
+
+interface Props {
+	/** Navbar starts see-through with white text; use on pages that open on a dark hero. */
+	transparentNav?: boolean;
+}
+
+const { transparentNav = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Lily Groth</title>
+	</head>
+	<body>
+		<Navbar transparentAtTop={transparentNav} />
+		<slot />
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		--nav-h: 4rem;
+		/* Anchor links land below the fixed navbar instead of under it. */
+		scroll-padding-top: var(--nav-h);
+		/* No rubber-band bounce past the top/bottom of the page, which would
+		   otherwise flash the plain background behind the hero and last card. */
+		overscroll-behavior-y: none;
+	}
+
+	@media (max-width: 767px) {
+		:root {
+			--nav-h: 3.5rem;
+		}
+	}
+</style>
+
+<style>
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	body {
+		font-family:
+			Inter, Roboto, "Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial,
+			sans-serif;
+	}
+</style>

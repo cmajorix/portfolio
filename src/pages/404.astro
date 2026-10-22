@@ -1,0 +1,74 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+	<main>
+		<section class="wip">
+			<p class="eyebrow">Work in progress</p>
+			<h1>This page is still being built.</h1>
+			<p class="body">
+				Check back soon!
+			</p>
+			<a class="btn" href="/">Back to home</a>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.wip {
+		box-sizing: border-box;
+		min-height: 100svh;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+		max-width: 40rem;
+		padding: calc(var(--nav-h) + 2rem) 5vw 4rem;
+		margin-inline: auto;
+		color: #111;
+	}
+
+	.eyebrow {
+		margin: 0 0 1rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: #777;
+	}
+
+	h1 {
+		margin: 0 0 1rem;
+		font-size: clamp(2rem, 5vw, 3.25rem);
+		font-weight: 800;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+	}
+
+	.body {
+		margin: 0 0 2rem;
+		font-size: 1.1rem;
+		line-height: 1.6;
+		color: #444;
+	}
+
+	.btn {
+		padding: 0.8em 1.5em;
+		border-radius: 999px;
+		background: #111;
+		color: white;
+		font-weight: 600;
+		text-decoration: none;
+		transition: transform 150ms ease;
+	}
+
+	.btn:hover {
+		transform: translateY(-2px);
+	}
+
+	.btn:focus-visible {
+		outline: 3px solid #111;
+		outline-offset: 3px;
+	}
+</style>
